@@ -1,0 +1,289 @@
+from arcgis import GIS
+from IPython.display import display
+from arcgis.features import FeatureLayerCollection
+from arcgis.features import FeatureLayer
+from PIL import Image
+from PyPDF2 import PdfMerger
+from fpdf import FPDF
+
+pdf = FPDF()
+pdf.add_page()
+pdf.set_font("Arial", size = 11)
+
+ 
+
+
+mydoc = docx.Document()
+
+
+gis = GIS('home')
+int_point = gis.content.get('e3796b16d9484709963a1cc2984cf325')
+
+#ImagePath = LayoutV[1]
+
+
+
+
+
+
+search_results = gis.content.search('title: FTTH TQ','Feature Layer')
+picture = search_results[0]
+
+# Prints Feature Layer
+FTTH = search_results[0]
+
+FTTH
+
+FTTH_layers = FTTH.layers
+
+
+Number_Order = input("Enter Order Number ")
+
+
+
+def install_area():
+    layers = FTTH_layers[3]#change number to pick different layer, 0 = Interior point, 1 = Exterior Point etc...
+    layers_fset = layers.query(where= "OrderNumber = {} ".format(Number_Order))
+    layers_features = layers_fset.features
+    query_results = layers.query(where= "OrderNumber = {} ".format(Number_Order))
+
+    
+
+    #--------------Address----------------------
+    
+    address = layers_features[0].attributes.pop('POC_Address')
+    
+    pdf.cell(1, 1, txt = "Address:",ln = 1, align = 'L')#Heading, cant figure out what the numbers do
+    pdf.cell(200, 10, txt = "{}".format(address),ln = 2, align = 'L')#Information in cell
+    pdf.cell(200, 10, txt = "",ln = 1, align = 'L')# This line adds a space inbetween the next one
+ 
+    
+    
+
+    
+    #--------------OrderNumber--------------------
+
+    Order_number = str(layers_features[0].attributes.pop('OrderNumber'))
+    
+    pdf.cell(200, 10, txt = "Order Number:",ln = 1, align = 'L')
+    pdf.cell(200, 10, txt = "{}".format(Number_Order),ln = 2, align = 'L')
+    pdf.cell(200, 10, txt = "",ln = 1, align = 'L')
+    
+    
+    #-------------Full Name----------------------
+    
+    name_first = layers_features[0].attributes.pop('POC_FirstName')
+    name_last = layers_features[0].attributes.pop('POC_LastName')
+
+    pdf.cell(200, 10, txt = "Name:",ln = 1, align = 'L')
+    pdf.cell(200, 10, txt = "{}".format(name_first+name_last),ln = 2, align = 'L')
+    pdf.cell(200, 10, txt = "",ln = 1, align = 'L')    
+    
+    
+    #-------------CellPhone---------------------
+    Phone_number = Order_number = str(layers_features[0].attributes.pop('POC_Phone'))
+
+    pdf.cell(200, 10, txt = "PhoneNumber:",ln = 1, align = 'L')
+    pdf.cell(200, 10, txt = "{}".format(Phone_number),ln = 2, align = 'L')
+    pdf.cell(200, 10, txt = "",ln = 1, align = 'L')    
+
+    
+    #-------------Email----------------------
+    Email = layers_features[0].attributes.pop('POC_Email')
+
+    pdf.cell(200, 10, txt = "Email:",ln = 1, align = 'L')
+    pdf.cell(200, 10, txt = "{}".format(Email),ln = 2, align = 'L')
+    pdf.cell(200, 10, txt = "",ln = 1, align = 'L')    
+
+    
+    
+    
+
+def interior_point():
+    layers = FTTH_layers[0]
+    layers_fset = layers.query(where= "OrderNumber = {} ".format(Number_Order))
+    layers_features = layers_fset.features
+    query_results = layers.query(where= "OrderNumber = {} ".format(Number_Order))
+    
+    #-----------KeyAreasForWifi----------
+
+    Wifi = layers_features[0].attributes.pop('Wifi_Coverage')
+
+    pdf.cell(200, 10, txt = "Wifi:",ln = 1, align = 'L')
+    pdf.cell(200, 10, txt = "{}".format(Wifi),ln = 2, align = 'L')
+    pdf.cell(200, 10, txt = "",ln = 1, align = 'L')    
+
+   
+
+
+
+
+    #-----------ElectronicLocations----------
+    
+    
+    electronic_locations = layers_features[0].attributes.pop('Location')
+    #oid  = str(layers_features[0].attributes.pop('OBJECTID'))
+
+
+    pdf.cell(200, 10, txt = "Electronic Locations:",ln = 1, align = 'L')
+    pdf.cell(200, 10, txt = "{}".format(electronic_locations ),ln = 2, align = 'L')
+    pdf.cell(200, 10, txt = "",ln = 1, align = 'L')    
+
+    
+    
+    #---------InteriorObservations---------
+    
+    inside = layers_features[0].attributes.pop("Observations")
+
+    pdf.cell(200, 10, txt = "Interior Observations:",ln = 1, align = 'L')
+    pdf.cell(200, 10, txt = "{}".format(inside ),ln = 2, align = 'L')
+    pdf.cell(200, 10, txt = "",ln = 1, align = 'L')    
+
+    
+    
+def exterior_point():
+    layers = FTTH_layers[1]
+    layers_fset = layers.query(where= "OrderNumber = {} ".format(Number_Order))
+    layers_features = layers_fset.features
+    query_results = layers.query(where= "OrderNumber = {} ".format(Number_Order))
+    
+    #----------ExteriorSheeting----------
+    
+    Ext_sheet = layers_features[0].attributes.pop('ExteriorSheeting')
+    
+    pdf.cell(200, 10, txt = "Exterior Sheeting:",ln = 1, align = 'L')
+    pdf.cell(200, 10, txt = "{}".format(Ext_sheet ),ln = 2, align = 'L')
+    pdf.cell(200, 10, txt = "",ln = 1, align = 'L')    
+
+
+    
+    #----------EntryPointDescription----------
+    
+    Entry_Point = layers_features[0].attributes.pop('EntryPointDescription')
+
+    pdf.cell(200, 10, txt = "Entry Point:",ln = 1, align = 'L')
+    pdf.cell(200, 10, txt = "{}".format(Entry_Point),ln = 2, align = 'L')
+    pdf.cell(200, 10, txt = "",ln = 1, align = 'L')    
+
+    
+    
+    #----------ObstacleType-----------
+    
+    obstacle = layers_features[0].attributes.pop('ObstacleType')
+
+  
+    pdf.cell(200, 10, txt = "Obstacles:",ln = 1, align = 'L')
+    pdf.cell(200, 10, txt = "{}".format(obstacle),ln = 2, align = 'L')
+    pdf.cell(200, 10, txt = "",ln = 1, align = 'L')    
+
+    
+    
+    #----------Notes----------------------
+    
+    note = layers_features[0].attributes.pop('Notes')
+
+    
+    pdf.cell(200, 10, txt = "Notes:",ln = 1, align = 'L')
+    pdf.cell(200, 10, txt = "{}".format(note),ln = 2, align = 'L')
+    pdf.cell(200, 10, txt = "",ln = 1, align = 'L')    
+
+    
+    
+def exterior_line():
+    layers = FTTH_layers[2]
+    layers_fset = layers.query(where= "OrderNumber = {} ".format(Number_Order))
+    layers_features = layers_fset.features
+    query_results = layers.query(where= "OrderNumber = {} ".format(Number_Order))
+    
+    #----------ObstacleType----------  
+    Obstacle_type = layers_features[0].attributes.pop('ObstacleType')
+    
+    pdf.cell(200, 10, txt = "Obstacle Type:",ln = 1, align = 'L')
+    pdf.cell(200, 10, txt = "{}".format(Obstacle_type),ln = 2, align = 'L')
+    pdf.cell(200, 10, txt = "",ln = 1, align = 'L')    
+
+
+    #----------Notes---------- 
+    Notes = layers_features[0].attributes.pop('Notes')
+    
+    pdf.cell(200, 10, txt = "Notes:",ln = 1, align = 'L')
+    pdf.cell(200, 10, txt = "{}".format(Notes),ln = 2, align = 'L')
+    pdf.output("GFG.pdf")
+
+
+    
+
+
+    
+    
+def picture():
+    TQData = gis.content.get('e3796b16d9484709963a1cc2984cf325')
+    templates ={"FTTH_TQ_CablePlacement":"Template-CablePlacement","FTTH_TQ_ISP":"Template-ISP","FTTH_TQ_OSP":"Template-OSP"}
+    for l in templates:
+
+        Layout = templates[l]
+
+        #getting Attachments from AGO
+        #Feature Server
+        TQData = gis.content.get('e3796b16d9484709963a1cc2984cf325')
+        #Layout Variables
+        GISLayouts={"Template-ISP":[0,r'\ISP'], "Template-OSP":[1,r'\OSP'], "Template-CablePlacement":[2,r'\OSP']}
+        LayoutV = GISLayouts[Layout]
+        LryNum = LayoutV[0]
+        ImagePath = LayoutV[1]
+        OutputPath = r"C:\Users\max.beuvelet\Desktop\FTTH Project"
+        
+    
+
+
+
+    TQLayers = TQData.layers[1]
+    #query featuers 
+    TQFeatureSet = TQLayers.query(where='OrderNumber='+Number_Order,out_fields='OBJECTID')
+    #get object ids
+    ObjIDs = [x.attributes['OBJECTID'] for x in TQFeatureSet]
+    print(ObjIDs)
+    for x in ObjIDs:
+        y=TQLayers.attachments.get_list(oid=x)
+        for img in y:
+            #print(img['id'])
+            dwn = TQLayers.attachments.download(oid=x, attachment_id=img['id'])
+            #print(dwn[0])
+            #print(dwn)
+
+
+    for ids in ObjIDs:
+        arcpy.AddMessage(ids)
+        attach = TQLayers.attachments.get_list(oid=ids)
+        for att in attach:
+            DwnFile = TQLayers.attachments.download(oid=ids, attachment_id=att['id'],save_path=OutputPath+ImagePath )
+            arcpy.AddMessage(DwnFile)
+            
+
+            
+    #print(DwnFile)
+            
+    image_1 = Image.open(r'{}'.format(DwnFile))
+    im = image_1.convert('RGB')
+    im.save(r'C:\Users\max.beuvelet\Desktop\FTTH Project\pic.pdf')
+
+    
+    
+    pdfs = [r"C:\Users\max.beuvelet\Documents\ArcGIS\Projects\pythontest\GFG.pdf", r'C:\Users\max.beuvelet\Desktop\FTTH Project\pic.pdf']
+
+
+    merger = PdfMerger()
+
+    for pdf in pdfs:
+        merger.append(pdf)
+
+    merger.write("endingresults.pdf")
+    merger.close()
+
+        
+    
+install_area()
+interior_point()
+exterior_point()
+exterior_line()
+picture()
