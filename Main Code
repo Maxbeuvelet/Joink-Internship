@@ -125,14 +125,14 @@ def interior_point():
     
     
     electronic_locations = layers_features[0].attributes.pop('Location')
-    oid  = str(layers_features[0].attributes.pop('OBJECTID'))
+    #oid  = str(layers_features[0].attributes.pop('OBJECTID'))
 
     try:
         pdf.cell(200, 10, txt = "Electronic Locations:",ln = 1, align = 'L')
         pdf.cell(200, 10, txt = "{}".format("ID:" + oid + " "+ electronic_locations ),ln = 2, align = 'L')
         pdf.cell(200, 10, txt = "",ln = 1, align = 'L')
     except:
-        pdf.cell(200, 10, txt = "{}".format("???" ),ln = 2, align = 'L')
+        pdf.cell(200, 10, txt = "{}".format("None" ),ln = 2, align = 'L')
         pdf.cell(200, 10, txt = "",ln = 1, align = 'L')
 
     
@@ -190,7 +190,7 @@ def exterior_point():
     #----------Notes----------------------
     
     note = layers_features[0].attributes.pop('Notes')
-    oid  = str(layers_features[0].attributes.pop('OBJECTID'))
+    #oid  = str(layers_features[0].attributes.pop('OBJECTID'))
 
     try:
         pdf.cell(200, 10, txt = "Exterior Point Notes:",ln = 1, align = 'L')
