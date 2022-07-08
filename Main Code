@@ -1,28 +1,20 @@
 from arcgis import GIS
-from IPython.display import display
 from arcgis.features import FeatureLayerCollection
 from arcgis.features import FeatureLayer
 from PIL import Image
 from PyPDF2 import PdfMerger
 from fpdf import FPDF
-
+from PIL import Image, ExifTags
 pdf = FPDF()
 pdf.add_page()
+FPDF.add_page
 pdf.set_font("Arial", size = 11)
 
  
 
 
-mydoc = docx.Document()
-
-
 gis = GIS('home')
 int_point = gis.content.get('e3796b16d9484709963a1cc2984cf325')
-
-#ImagePath = LayoutV[1]
-
-
-
 
 
 
@@ -74,7 +66,7 @@ def install_area():
     name_last = layers_features[0].attributes.pop('POC_LastName')
 
     pdf.cell(200, 10, txt = "Name:",ln = 1, align = 'L')
-    pdf.cell(200, 10, txt = "{}".format(name_first+name_last),ln = 2, align = 'L')
+    pdf.cell(200, 10, txt = "{}".format(name_first+ " " +name_last),ln = 2, align = 'L')
     pdf.cell(200, 10, txt = "",ln = 1, align = 'L')    
     
     
@@ -104,8 +96,10 @@ def interior_point():
     query_results = layers.query(where= "OrderNumber = {} ".format(Number_Order))
     
     #-----------KeyAreasForWifi----------
-
-    Wifi = layers_features[0].attributes.pop('Wifi_Coverage')
+    try:
+        Wifi = layers_features[0].attributes.pop('Wifi_Coverage')
+    except:
+        print("L")
     oid  = str(layers_features[0].attributes.pop('OBJECTID'))
     
     try:
@@ -194,7 +188,7 @@ def exterior_point():
 
     try:
         pdf.cell(200, 10, txt = "Exterior Point Notes:",ln = 1, align = 'L')
-        pdf.cell(200, 10, txt = "{}".format("ID" + oid+" " + note),ln = 2, align = 'L')
+        pdf.cell(200, 10, txt = "{}".format("ID:" + oid+" " + note),ln = 2, align = 'L')
         pdf.cell(200, 10, txt = "",ln = 1, align = 'L')   
     except:
         pdf.cell(200, 10, txt = "{}".format("None"),ln = 2, align = 'L')
@@ -231,6 +225,8 @@ def exterior_line():
     
     
 def picture():
+    pdf=FPDF()
+    pdf.add_page()
     TQData = gis.content.get('e3796b16d9484709963a1cc2984cf325')
     templates ={"FTTH_TQ_CablePlacement":"Template-CablePlacement","FTTH_TQ_ISP":"Template-ISP","FTTH_TQ_OSP":"Template-OSP"}
     for l in templates:
@@ -257,13 +253,14 @@ def picture():
     #get object ids
     ObjIDs = [x.attributes['OBJECTID'] for x in TQFeatureSet]
     print(ObjIDs)
+    image_list = []
     for x in ObjIDs:
         y=TQLayers.attachments.get_list(oid=x)
         for img in y:
             #print(img['id'])
             dwn = TQLayers.attachments.download(oid=x, attachment_id=img['id'])
-            #print(dwn[0])
-            #print(dwn)
+            image_list.append(dwn)
+
 
 
     for ids in ObjIDs:
@@ -275,15 +272,40 @@ def picture():
             
 
             
-    #print(DwnFile)
-            
-    image_1 = Image.open(r'{}'.format(dwn[0]))
-    im = image_1.convert('RGB')
-    im.save(r'C:\Users\max.beuvelet\Desktop\FTTH Project\pic.pdf')
+    #adds the images into the pdf 
+    for row in image_list:
+        print(row)
+        for x in row:
+            pdf.image("{}".format(x),50,20,w=150)# x and y move the image up,down,left or right, w increases or decrease size
+            pdf.add_page()
+    pdf.output('eno.pdf')
+    
+    #Orientates the image 
+    try:
+        for x in row:
+            image=Image.open(x)
 
+        for orientation in ExifTags.TAGS.keys():
+            if ExifTags.TAGS[orientation]=='Orientation':
+                break
+
+        exif = image._getexif()
+
+        if exif[orientation] == 3:
+            image=image.rotate(180, expand=True)
+        elif exif[orientation] == 6:
+            image=image.rotate(270, expand=True)
+        elif exif[orientation] == 8:
+            image=image.rotate(90, expand=True)
+
+        image.save(r'C:\Users\max.beuvelet\Documents\ArcGIS\Projects\pythontest\eno.pdf')
+        image.close()
+    except (AttributeError, KeyError, IndexError):
+        # cases: image don't have getexif
+        pass
     
     
-    pdfs = [r"C:\Users\max.beuvelet\Documents\ArcGIS\Projects\pythontest\GFG.pdf", r'C:\Users\max.beuvelet\Desktop\FTTH Project\pic.pdf']
+    pdfs = [r"C:\Users\max.beuvelet\Documents\ArcGIS\Projects\pythontest\GFG.pdf", r'C:\Users\max.beuvelet\Documents\ArcGIS\Projects\pythontest\eno.pdf']
 
 
     merger = PdfMerger()
@@ -294,8 +316,9 @@ def picture():
     merger.write("endingresults.pdf")
     merger.close()
 
+
         
-    
+#picture()    
 install_area()
 interior_point()
 exterior_point()
