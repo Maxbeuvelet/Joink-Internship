@@ -5,10 +5,12 @@ from PIL import Image
 from PyPDF2 import PdfMerger
 from fpdf import FPDF
 from PIL import Image, ExifTags
+import os
 pdf = FPDF()
 pdf.add_page()
 FPDF.add_page
-pdf.set_font("Arial", size = 11)
+pdf.set_font("Times", size = 15)
+
 
  
 
@@ -216,16 +218,23 @@ def exterior_line():
     
     pdf.cell(200, 10, txt = "Notes:",ln = 1, align = 'L')
     pdf.cell(200, 10, txt = "{}".format(Notes),ln = 2, align = 'L')
-    pdf.output("GFG.pdf")
-
-
-    
-
+    #pdf.output("GFG.pdf")
 
     
     
 def picture():
-    pdf=FPDF()
+
+    layers = FTTH_layers[1]
+    layers_fset = layers.query(where= "OrderNumber = {} ".format(Number_Order))
+    layers_features = layers_fset.features
+    query_results = layers.query(where= "OrderNumber = {} ".format(Number_Order))
+    pdf.set_font("Times", size = 13)
+    
+    oid  = str(layers_features[0].attributes.pop('OBJECTID'))
+    Ext_sheet = layers_features[0].attributes.pop('ExteriorSheeting')
+    Entry_Point = layers_features[0].attributes.pop('EntryPointDescription')
+    Notes = layers_features[0].attributes.pop('Notes')
+
     pdf.add_page()
     TQData = gis.content.get('e3796b16d9484709963a1cc2984cf325')
     templates ={"FTTH_TQ_CablePlacement":"Template-CablePlacement","FTTH_TQ_ISP":"Template-ISP","FTTH_TQ_OSP":"Template-OSP"}
@@ -243,24 +252,14 @@ def picture():
         ImagePath = LayoutV[1]
         OutputPath = r"C:\Users\max.beuvelet\Desktop\FTTH Project"
         
-    
-
-
 
     TQLayers = TQData.layers[1]
     #query featuers 
     TQFeatureSet = TQLayers.query(where='OrderNumber='+Number_Order,out_fields='OBJECTID')
     #get object ids
     ObjIDs = [x.attributes['OBJECTID'] for x in TQFeatureSet]
-    print(ObjIDs)
+    #print(ObjIDs)
     image_list = []
-    for x in ObjIDs:
-        y=TQLayers.attachments.get_list(oid=x)
-        for img in y:
-            #print(img['id'])
-            dwn = TQLayers.attachments.download(oid=x, attachment_id=img['id'])
-            image_list.append(dwn)
-
 
 
     for ids in ObjIDs:
@@ -269,27 +268,124 @@ def picture():
         for att in attach:
             DwnFile = TQLayers.attachments.download(oid=ids, attachment_id=att['id'],save_path=OutputPath+ImagePath )
             arcpy.AddMessage(DwnFile)
+            index = len(OutputPath+ImagePath)+1
+            NewFileName = DwnFile[0]
+            NewFileName = NewFileName[:index] +' ' + str(ids) +' ' + NewFileName[index:]
+            image_list.append([NewFileName])
+
+            if os.path.exists(NewFileName):
+                os.remove(NewFileName)
+
+            os.rename(DwnFile[0],NewFileName)
+            rotate_image(NewFileName)
             
 
             
-    #adds the images into the pdf 
+    #adds the images into the pdf
+    #print(image_list)
     for row in image_list:
         print(row)
         for x in row:
-            pdf.image("{}".format(x),50,20,w=150)# x and y move the image up,down,left or right, w increases or decrease size
+            #rotate_image(x)
+            pdf.cell(200, 10, txt = "OSP_Point " + '{}'.format(oid),ln = 1, align = 'L')# code is for adding information above the images
+            try:
+                pdf.cell(200, 10, txt = "Exterior Sheeting:" + Ext_sheet,ln = 1, align = 'L')
+            except:
+                pdf.cell(200, 10, txt = "{}".format(""),ln = 2, align = 'L')
+            try:
+                pdf.cell(200, 10, txt = "Entry Point:" + Entry_Point,ln = 1, align = 'L')
+            except:
+                pdf.cell(200, 10, txt = "{}".format(""),ln = 2, align = 'L')
+            try:
+                #pdf.cell(200, 10, txt = "Notes:" + Notes,ln = 1, align = 'L')
+                #pdf.cell(200, 10, txt = "{}".format(Notes),ln = 2, align = 'L')# try except is used when a NoneType error is given
+                pdf.cell(200, 10, txt = "",ln = 1, align = 'L')   
+            except:
+                pdf.cell(200, 10, txt = "{}".format(""),ln = 2, align = 'L')
+            pdf.image("{}".format(x),20,50,w=160)# x and y move the image up,down,left or right, w increases or decrease size
+            pdf.add_page()
+
+    
+
+    layers = FTTH_layers[2]
+    layers_fset = layers.query(where= "OrderNumber = {} ".format(Number_Order))
+    layers_features = layers_fset.features
+    query_results = layers.query(where= "OrderNumber = {} ".format(Number_Order))
+    pdf.set_font("Times", size = 15)
+
+    note = layers_features[0].attributes.pop('Notes')
+
+    pdf.add_page()
+    TQData = gis.content.get('e3796b16d9484709963a1cc2984cf325')
+    templates ={"FTTH_TQ_CablePlacement":"Template-CablePlacement","FTTH_TQ_ISP":"Template-ISP","FTTH_TQ_OSP":"Template-OSP"}
+    for l in templates:
+
+        Layout = templates[l]
+
+        #getting Attachments from AGO
+        #Feature Server
+        TQData = gis.content.get('e3796b16d9484709963a1cc2984cf325')
+        #Layout Variables
+        GISLayouts={"Template-ISP":[0,r'\ISP'], "Template-OSP":[1,r'\OSP'], "Template-CablePlacement":[2,r'\OSP']}
+        LayoutV = GISLayouts[Layout]
+        LryNum = LayoutV[0]
+        ImagePath = LayoutV[1]
+        OutputPath = r"C:\Users\max.beuvelet\Desktop\FTTH Project"
+        
+#---------- Referencing Exterior Line-------------------
+
+    TQLayers = TQData.layers[2]
+    #query featuers 
+    TQFeatureSet = TQLayers.query(where='OrderNumber='+Number_Order,out_fields='OBJECTID')
+    #get object ids
+    ObjIDs = [x.attributes['OBJECTID'] for x in TQFeatureSet]
+    #print(ObjIDs)
+    image_list = []
+
+
+    for ids in ObjIDs:
+        arcpy.AddMessage(ids)
+        attach = TQLayers.attachments.get_list(oid=ids)
+        for att in attach:
+            DwnFile = TQLayers.attachments.download(oid=ids, attachment_id=att['id'],save_path=OutputPath+ImagePath )
+            arcpy.AddMessage(DwnFile)
+            index = len(OutputPath+ImagePath)+1
+            NewFileName = DwnFile[0]
+            NewFileName = NewFileName[:index] +' ' + str(ids) +' ' + NewFileName[index:]
+            image_list.append([NewFileName])
+
+            if os.path.exists(NewFileName):
+                os.remove(NewFileName)
+
+            os.rename(DwnFile[0],NewFileName)
+            rotate_image(NewFileName)
+
+            
+    #adds the images into the pdf
+    for row in image_list:
+        #print(row)
+        for x in row:
+            #rotate_image(x)
+            pdf.cell(200, 10, txt = "Notes:" + note,ln = 1, align = 'L')
+            pdf.image("{}".format(x),20,50,w=160)# x and y move the image up,down,left or right, w increases or decrease size
             pdf.add_page()
     pdf.output('eno.pdf')
+
+    
+
     
     #Orientates the image 
+def rotate_image(ImgFile):
     try:
-        for x in row:
-            image=Image.open(x)
+        image=Image.open(ImgFile)
 
         for orientation in ExifTags.TAGS.keys():
             if ExifTags.TAGS[orientation]=='Orientation':
                 break
 
         exif = image._getexif()
+        #print(exif)
+        #print(exif[orientation])
 
         if exif[orientation] == 3:
             image=image.rotate(180, expand=True)
@@ -298,27 +394,15 @@ def picture():
         elif exif[orientation] == 8:
             image=image.rotate(90, expand=True)
 
-        image.save(r'C:\Users\max.beuvelet\Documents\ArcGIS\Projects\pythontest\eno.pdf')
+        image.save(ImgFile)
         image.close()
     except (AttributeError, KeyError, IndexError):
         # cases: image don't have getexif
         pass
     
-    
-    pdfs = [r"C:\Users\max.beuvelet\Documents\ArcGIS\Projects\pythontest\GFG.pdf", r'C:\Users\max.beuvelet\Documents\ArcGIS\Projects\pythontest\eno.pdf']
-
-
-    merger = PdfMerger()
-
-    for pdf in pdfs:
-        merger.append(pdf)
-
-    merger.write("endingresults.pdf")
-    merger.close()
 
 
         
-#picture()    
 install_area()
 interior_point()
 exterior_point()
