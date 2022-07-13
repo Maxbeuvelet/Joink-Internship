@@ -12,7 +12,6 @@ FPDF.add_page
 pdf.set_font("Times", size = 15)
 
 
- 
 
 
 gis = GIS('home')
@@ -113,7 +112,6 @@ def exterior_point():
     pdf.multi_cell(200, 10, txt = "{}".format("ID:" + oid + " "+ "Entry Point: " + Entry_Point), align = 'L')
 
     
-    pdf.cell(200, 10, txt = "{}".format(" "),ln = 2, align = 'L')
 
         
         
@@ -133,26 +131,42 @@ def exterior_point():
     
     #----------ObstacleType-----------
     v = 1
-    obstacle = layers_features[v].attributes.pop('ObstacleType')
-    while len(obstacle) > 0:
-        pdf.cell(200, 10, txt = "Obstacles:",ln = 1, align = 'L')
+    x = 1
+    #obstacle = layers_features[v].attributes.pop('ObstacleType')
+    pdf.cell(200, 10, txt = "Obstacles:",ln = 1, align = 'L')
+    while v < 7:
         try:
+            obstacle = layers_features[v].attributes.pop('ObstacleType')
+            description = layers_features[x].attributes.pop('ObstacleDescription')
+            if obstacle == "GU":
+                obstacle = "Gas Utility"
+            elif obstacle == "WU":
+                obstacle = "Water Utility"
+            elif obstacle == "EU":
+                obstacle = "Electric Utility"
             pdf.cell(200, 10, txt = "{}".format("ID:" + oid +" "+ "Obstacle Type: " + obstacle),ln = 2, align = 'L')
+            pdf.cell(200,10, txt = "{}".format("ID:" + oid + " " + "ObstacleDescription: " + description), ln = 2, align = 'L' )
+            v += 1
+            x +=1
+            print(x)
         except:
-            pdf.cell(200, 10, txt = "{}".format(" "),ln = 2, align = 'L')
-        v += 1
+            print("dog")
+            break
+
+
         
+
     #--------Obstacle Descripton---------
-    try:
-        description = layers_features[1].attributes.pop('ObstacleDescription')
-    except:
-        description = layers_features[0].attributes.pop('ObstacleDescription')
+    #try:
+        #description = layers_features[1].attributes.pop('ObstacleDescription')
+    #except:
+        #description = layers_features[0].attributes.pop('ObstacleDescription')
         
-    try:
-        pdf.cell(200,10, txt = "{}".format("ID:" + oid + " " + "ObstacleDescription:" + description),ln = 2, align = 'L')
-    except:
-        pdf.cell(200, 10, txt = "{}".format(" "),ln = 2, align = 'L')
-    pdf.cell(200, 10, txt = "",ln = 1, align = 'L')        
+    #try:
+        #pdf.cell(200,10, txt = "{}".format("ID:" + oid + " " + "ObstacleDescription:" + description),ln = 2, align = 'L')
+    #except:
+        #pdf.cell(200, 10, txt = "{}".format(" "),ln = 2, align = 'L')
+    #pdf.cell(200, 10, txt = "",ln = 1, align = 'L')        
 
 
     
@@ -358,8 +372,7 @@ def rotate_image(ImgFile):
     
 
 
-        
-install_area()
+install_area()        
 exterior_point()
 exterior_line()
 picture()
