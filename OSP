@@ -11,7 +11,7 @@ pdf.add_page()
 FPDF.add_page
 pdf.set_font("Times", size = 15)
 
-
+v = 1
  
 
 
@@ -88,57 +88,9 @@ def install_area():
     pdf.cell(200, 10, txt = "",ln = 1, align = 'L')    
 
     
-    
+    #-----------information just for OSP--------------
 def exterior_point():
     
-    #This might help you with the different coded values in the feature classes
-
-    #InteriorPoints
-    #Dictionary for the values in the InteriorType field from InteriorPoints
-    FeatureTypes = {'Entry':'Entry Point'
-                      ,'ONT':'Electronics Location'
-                      ,'wifi':'Wifi Coverage'
-                      ,'Other':'Observation'}
-
-    #Dictionary for the values in the InteriorType field from InteriorPoints with associated fields that can be completed based on the form that is being used.                   
-    FeatureTypes = {'Entry':['EntryPointType','CustomerQuestions']
-                            ,'ONT':['Location','CustomerQuestions']
-                            ,'wifi':['Wifi_Coverage','Wifi_Concerns','CustomerQuestions']
-                            ,'Other':['Observations','CustomerQuestions']}                  
-
-    #Dictionary for the values in the InteriorType field from InteriorPoints with associated fields that can be completed based on the form that is being used with field descriptions
-    FeatureTypes = {'Entry':['Entry Point',{'EntryPointType':'Entry Point Type','CustomerQuestions':'Customer Questions'}]
-                      ,'ONT':['Electronics Location',{'Location':'Electronics Location','CustomerQuestions':'Customer Questions'}]
-                      ,'wifi':['Wifi Coverage',{'Wifi_Coverage':'Wifi Coverage','Wifi_Concerns':'Wifi Concerns','CustomerQuestions':'Customer Questions'}]
-                      ,'Other':['Observation',{'Observations':'Observation','CustomerQuestions':'Customer Questions'}]}
-
-    #Exterior Points and Exterior Lines
-    #Dictionary for the values in the ObstacleType field from ExteriorPoints and ExteriorLines
-    Obstacles = {'SP':'Sprinkler','F':'Fence','GEO':'Geothermal','EU':'Electric Utility','WU':'Water Utility','GU':'Gas Utility','SU':'Sewer','P':'Pole','OTH':'Other'}            
-
-    #Dictionary for the values in the ExteriorType field from ExteriorPoints and ExteriorLines
-    FeatureTypes = {'PP':'Planned Path'
-                    ,'OBS':'Obstacle'}
-
-    #Exterior Points                
-    #Dictionary for the values in the ExteriorType field from ExteriorPoints with associated fields that can be completed based on the form that is being used.        
-    FeatureTypes = {'PP':['ExteriorSheeting','EntryPointDescription','Notes']
-                    ,'OBS':['ObstacleType','ObstacleDescription','Notes']}  
-
-
-    #Dictionary for the values in the ExteriorType field from ExteriorPoints with associated fields that can be completed based on the form that is being used with field descriptions.    
-    FeatureTypes = {'PP':['Planned Path',{'ExteriorSheeting':'Exterior Sheeting','EntryPointDescription':'Entry Point','Notes':'Notes'}]
-                      ,'OBS':['Obstacle',{'ObstacleType':'Obstacle Type','ObstacleDescription':'Obstacle Description','Notes':'Notes'}]}
-
-    #Exterior Lines
-    #Dictionary for the values in the ExteriorType field from ExteriorLines with associated fields that can be completed based on the form that is being used.    
-    FeatureTypes = {'PP':['Notes']
-                    ,'OBS':['ObstacleType','ObstacleDescription''Notes']}
-
-
-    #Dictionary for the values in the ExteriorType field from ExteriorLines with associated fields that can be completed based on the form that is being used with field descriptions.
-    FeatureTypes = {'PP':['Planned Path',{'Notes':'Notes'}]
-                      ,'OBS':['Obstacle',{'ObstacleType':'Obstacle Type','ObstacleDescription':'Obstacle Description','Notes':'Notes'}]}
     layers = FTTH_layers[1]
     layers_fset = layers.query(where= "OrderNumber = {} ".format(Number_Order))
     layers_features = layers_fset.features
@@ -153,16 +105,15 @@ def exterior_point():
     pdf.cell(200, 10, txt = "Planned Path:",ln = 1, align = 'L')
     pdf.cell(200, 10, txt = "{}".format("ID:" + oid +" " + "Exterior Sheeting: "  + Ext_sheet ),ln = 2, align = 'L')    
 
-
     
     #----------EntryPointDescription----------
     
     Entry_Point = layers_features[0].attributes.pop('EntryPointDescription')
-    try:
-        pdf.cell(200, 10, txt = "{}".format("ID:" + oid + " "+ "Entry Point: " + Entry_Point),ln = 2, align = 'L')
+    
+    pdf.multi_cell(200, 10, txt = "{}".format("ID:" + oid + " "+ "Entry Point: " + Entry_Point), align = 'L')
 
-    except:
-        pdf.cell(200, 10, txt = "{}".format(" "),ln = 2, align = 'L')
+    
+    pdf.cell(200, 10, txt = "{}".format(" "),ln = 2, align = 'L')
 
         
         
@@ -172,7 +123,7 @@ def exterior_point():
 
     try:
 
-        pdf.cell(200, 10, txt = "{}".format("ID:" + oid+ " " + "Notes " + note),ln = 2, align = 'L')
+        pdf.multi_cell(200, 10, txt = "{}".format("ID:" + oid+ " " + "Notes " + note), align = 'L')
         pdf.cell(200, 10, txt = "",ln = 1, align = 'L')   
     except:
         pdf.cell(200, 10, txt = "{}".format(" "),ln = 2, align = 'L')
@@ -181,13 +132,37 @@ def exterior_point():
 
     
     #----------ObstacleType-----------
-    
-    obstacle = layers_features[0].attributes.pop('ObstacleType')
+    try:
+        obstacle = layers_features[v].attributes.pop('ObstacleType')# if the same order number has 2 or more cells and one of them is empty, change the number to go through the cells 
+        while len(obstacle) > 0:
+            if obstacle == "GU":
+                obstacle = "Gas Utility"
+                v += 1
+            elif obstacle == "WU":
+                obstacle = "Water Utility"
+    except:
+        obstacle = layers_features[0].attributes.pop('ObstacleType')
 
+        
   
     pdf.cell(200, 10, txt = "Obstacles:",ln = 1, align = 'L')
-    pdf.cell(200, 10, txt = "{}".format(obstacle),ln = 2, align = 'L')
-    pdf.cell(200, 10, txt = "",ln = 1, align = 'L')    
+    try:
+        pdf.cell(200, 10, txt = "{}".format("ID:" + oid +" "+ "Obstacle Type: " + obstacle),ln = 2, align = 'L')
+    except:
+        pdf.cell(200, 10, txt = "{}".format(" "),ln = 2, align = 'L')
+        
+    #--------Obstacle Descripton---------
+    try:
+        description = layers_features[1].attributes.pop('ObstacleDescription')
+    except:
+        description = layers_features[0].attributes.pop('ObstacleDescription')
+        
+    try:
+        pdf.cell(200,10, txt = "{}".format("ID:" + oid + " " + "ObstacleDescription:" + description),ln = 2, align = 'L')
+    except:
+        pdf.cell(200, 10, txt = "{}".format(" "),ln = 2, align = 'L')
+    pdf.cell(200, 10, txt = "",ln = 1, align = 'L')        
+
 
     
 def exterior_line():
@@ -202,7 +177,7 @@ def exterior_line():
     Notes = layers_features[0].attributes.pop('Notes')
     
     pdf.cell(200, 10, txt = "Planned Path:",ln = 1, align = 'L')
-    pdf.cell(200, 10, txt = "{}".format("ID: " + oid + " " + "Notes: " + Notes),ln = 2, align = 'L')
+    pdf.multi_cell(200, 10, txt = "{}".format("ID: " + oid + " " + "Notes: " + Notes), align = 'L')
     
 
     #----------ObstacleType----------  
@@ -225,7 +200,7 @@ def picture():
     Entry_Point = layers_features[0].attributes.pop('EntryPointDescription')
     Notes = layers_features[0].attributes.pop('Notes')
 
-    pdf.add_page()
+    #pdf.add_page()
     TQData = gis.content.get('e3796b16d9484709963a1cc2984cf325')
     templates ={"FTTH_TQ_CablePlacement":"Template-CablePlacement","FTTH_TQ_ISP":"Template-ISP","FTTH_TQ_OSP":"Template-OSP"}
     for l in templates:
@@ -272,8 +247,9 @@ def picture():
 
             
     #adds the images into the pdf
-    #print(image_list)
+    print(image_list)
     for row in image_list:
+        pdf.add_page()
         print(row)
         for x in row:
             #rotate_image(x)
@@ -293,7 +269,7 @@ def picture():
             except:
                 pdf.cell(200, 10, txt = "{}".format(""),ln = 2, align = 'L')
             pdf.image("{}".format(x),20,50,w=160)# x and y move the image up,down,left or right, w increases or decrease size
-            pdf.add_page()
+            #pdf.add_page()
 
     
 
@@ -305,7 +281,7 @@ def picture():
 
     note = layers_features[0].attributes.pop('Notes')
 
-    pdf.add_page()
+    #pdf.add_page()
     TQData = gis.content.get('e3796b16d9484709963a1cc2984cf325')
     templates ={"FTTH_TQ_CablePlacement":"Template-CablePlacement","FTTH_TQ_ISP":"Template-ISP","FTTH_TQ_OSP":"Template-OSP"}
     for l in templates:
@@ -353,12 +329,11 @@ def picture():
             
     #adds the images into the pdf
     for row in image_list:
-        #print(row)
+        pdf.add_page()
         for x in row:
-            #rotate_image(x)
             pdf.cell(200, 10, txt = "Notes:" + note,ln = 1, align = 'L')
             pdf.image("{}".format(x),20,50,w=160)# x and y move the image up,down,left or right, w increases or decrease size
-            pdf.add_page()
+            #pdf.add_page()
     pdf.output('eno.pdf')
 
     
