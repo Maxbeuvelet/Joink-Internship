@@ -96,24 +96,30 @@ def exterior_point():
     query_results = layers.query(where= "OrderNumber = {} ".format(Number_Order))
     oid  = str(layers_features[0].attributes.pop('OBJECTID'))
 
+
     
     #----------ExteriorSheeting----------
     
     Ext_sheet = layers_features[0].attributes.pop('ExteriorSheeting')
     
     pdf.cell(200, 10, txt = "Planned Path:",ln = 1, align = 'L')
-    pdf.cell(200, 10, txt = "{}".format("ID:" + oid +" " + "Exterior Sheeting: "  + Ext_sheet ),ln = 2, align = 'L')    
+    try:
+        pdf.cell(200, 10, txt = "{}".format("ID:" + oid +" " + "Exterior Sheeting: "  + Ext_sheet ),ln = 2, align = 'L')
+    except:
+        pdf.cell(200, 10, txt = "{}".format(" "),ln = 2, align = 'L')
+
 
     
     #----------EntryPointDescription----------
     
     Entry_Point = layers_features[0].attributes.pop('EntryPointDescription')
-    
-    pdf.multi_cell(200, 10, txt = "{}".format("ID:" + oid + " "+ "Entry Point: " + Entry_Point), align = 'L')
+    try:
+        pdf.multi_cell(200, 10, txt = "{}".format("ID:" + oid + " "+ "Entry Point: " + Entry_Point), align = 'L')
+    except: 
+        pdf.cell(200, 10, txt = "{}".format("Entry Point:  "),ln = 2, align = 'L')
 
-    
 
-        
+
         
     #----------Notes----------------------
     
@@ -130,43 +136,23 @@ def exterior_point():
 
     
     #----------ObstacleType-----------
-    v = 1
-    x = 1
-    #obstacle = layers_features[v].attributes.pop('ObstacleType')
     pdf.cell(200, 10, txt = "Obstacles:",ln = 1, align = 'L')
-    while v < 7:
-        try:
-            obstacle = layers_features[v].attributes.pop('ObstacleType')
-            description = layers_features[x].attributes.pop('ObstacleDescription')
-            if obstacle == "GU":
-                obstacle = "Gas Utility"
-            elif obstacle == "WU":
-                obstacle = "Water Utility"
-            elif obstacle == "EU":
-                obstacle = "Electric Utility"
-            pdf.cell(200, 10, txt = "{}".format("ID:" + oid +" "+ "Obstacle Type: " + obstacle),ln = 2, align = 'L')
-            pdf.cell(200,10, txt = "{}".format("ID:" + oid + " " + "ObstacleDescription: " + description), ln = 2, align = 'L' )
-            v += 1
-            x +=1
-            print(x)
-        except:
-            print("dog")
-            break
-
+    obstacle_type = {'GU': 'Gas Utility', 'WU':'Water Utility', 'EU':'Electric Utility', 'GEO':'Geothermal'}
+    for row in layers_features:
+        obstacle = row.attributes.pop('ObstacleType')
+        if obstacle != None:
+            obstacle = obstacle_type[obstacle]
+            pdf.cell(200,10, txt = "{}".format("ID:" + oid +" "+ "Obstacle Type: " + obstacle),ln = 2, align = 'L')
+        description = row.attributes.pop('ObstacleDescription')
+        if description != None:
+            pdf.cell(200,10, txt = "{}".format("ID:" + oid +" "+ "ObstacleDescription: " + description), ln = 2, align = 'L' )
+            pdf.cell(200, 10, txt = "",ln = 1, align = 'L')
+    
 
         
+#---------- Referencing Exterior Line-------------------
 
-    #--------Obstacle Descripton---------
-    #try:
-        #description = layers_features[1].attributes.pop('ObstacleDescription')
-    #except:
-        #description = layers_features[0].attributes.pop('ObstacleDescription')
-        
-    #try:
-        #pdf.cell(200,10, txt = "{}".format("ID:" + oid + " " + "ObstacleDescription:" + description),ln = 2, align = 'L')
-    #except:
-        #pdf.cell(200, 10, txt = "{}".format(" "),ln = 2, align = 'L')
-    #pdf.cell(200, 10, txt = "",ln = 1, align = 'L')        
+ 
 
 
     
@@ -252,10 +238,9 @@ def picture():
 
             
     #adds the images into the pdf
-    print(image_list)
+    #print(image_list)
     for row in image_list:
         pdf.add_page()
-        print(row)
         for x in row:
             #rotate_image(x)
             pdf.cell(200, 10, txt = "OSP_Point " + '{}'.format(oid),ln = 1, align = 'L')# code is for adding information above the images
@@ -264,17 +249,26 @@ def picture():
             except:
                 pdf.cell(200, 10, txt = "{}".format(""),ln = 2, align = 'L')
             try:
-                pdf.cell(200, 10, txt = "Entry Point:" + Entry_Point,ln = 1, align = 'L')
+                pdf.multi_cell(200, 10, txt = "Entry Point:" + Entry_Point, align = 'L')
             except:
                 pdf.cell(200, 10, txt = "{}".format(""),ln = 2, align = 'L')
             try:
-                pdf.cell(200, 10, txt = "Notes:" + Notes,ln = 1, align = 'L')
+                pdf.multi_cell(200, 10, txt = "Notes:" + Notes, align = 'L')
                 #pdf.cell(200, 10, txt = "{}".format(Notes),ln = 2, align = 'L')# try except is used when a NoneType error is given
                 pdf.cell(200, 10, txt = "",ln = 1, align = 'L')   
             except:
                 pdf.cell(200, 10, txt = "{}".format(""),ln = 2, align = 'L')
-            pdf.image("{}".format(x),20,50,w=160)# x and y move the image up,down,left or right, w increases or decrease size
+            pdf.image("{}".format(x),25,80,w=140)# x and y move the image up,down,left or right, w increases or decrease size
             #pdf.add_page()
+    w = []       
+    for items in image_list:
+        for x in items:
+            print(x[48:51])
+            w.append(x[48:51])
+    print(w)
+    z = w[3]
+    print(z)
+        
 
     
 
@@ -336,11 +330,11 @@ def picture():
     for row in image_list:
         pdf.add_page()
         for x in row:
-            pdf.cell(200, 10, txt = "Notes:" + note,ln = 1, align = 'L')
+            pdf.multi_cell(200, 10, txt = "Notes:" + note, align = 'L')
             pdf.image("{}".format(x),20,50,w=160)# x and y move the image up,down,left or right, w increases or decrease size
             #pdf.add_page()
     pdf.output('eno.pdf')
-
+    
     
 
     
