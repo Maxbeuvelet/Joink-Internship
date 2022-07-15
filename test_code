@@ -95,7 +95,65 @@ def exterior_point():
     layers_features = layers_fset.features
     query_results = layers.query(where= "OrderNumber = {} ".format(Number_Order))
     oid  = str(layers_features[0].attributes.pop('OBJECTID'))
+    oidd = str(layers_features[1].attributes.pop('OBJECTID'))
+    
 
+    
+    
+    
+    TQData = gis.content.get('e3796b16d9484709963a1cc2984cf325')
+    templates ={"FTTH_TQ_CablePlacement":"Template-CablePlacement","FTTH_TQ_ISP":"Template-ISP","FTTH_TQ_OSP":"Template-OSP"}
+    for l in templates:
+
+        Layout = templates[l]
+
+        #getting Attachments from AGO
+        #Feature Server
+        TQData = gis.content.get('e3796b16d9484709963a1cc2984cf325')
+        #Layout Variables
+        GISLayouts={"Template-ISP":[0,r'\ISP'], "Template-OSP":[1,r'\OSP'], "Template-CablePlacement":[2,r'\OSP']}
+        LayoutV = GISLayouts[Layout]
+        LryNum = LayoutV[0]
+        ImagePath = LayoutV[1]
+        OutputPath = r"C:\Users\max.beuvelet\Desktop\FTTH Project"
+        
+
+    TQLayers = TQData.layers[1]
+    #query featuers 
+    TQFeatureSet = TQLayers.query(where='OrderNumber='+Number_Order,out_fields='OBJECTID')
+    #get object ids
+    ObjIDs = [x.attributes['OBJECTID'] for x in TQFeatureSet]
+    #print(ObjIDs)
+    image_list = []
+
+
+    for ids in ObjIDs:
+        arcpy.AddMessage(ids)
+        attach = TQLayers.attachments.get_list(oid=ids)
+        for att in attach:
+            DwnFile = TQLayers.attachments.download(oid=ids, attachment_id=att['id'],save_path=OutputPath+ImagePath )
+            arcpy.AddMessage(DwnFile)
+            index = len(OutputPath+ImagePath)+1
+            NewFileName = DwnFile[0]
+            NewFileName = NewFileName[:index] +' ' + str(ids) +' ' + NewFileName[index:]
+            image_list.append([NewFileName])
+
+            if os.path.exists(NewFileName):
+                os.remove(NewFileName)
+
+            os.rename(DwnFile[0],NewFileName)
+            rotate_image(NewFileName)
+            
+    w = []       
+    for items in image_list:
+        #Get list of image's
+        for index, x in enumerate(items):
+            print(index, items)
+            # get image numbers
+            w.append(x[48:51])
+    print(w)
+    x = w[5]
+    print(x)
 
     
     #----------ExteriorSheeting----------
@@ -145,7 +203,7 @@ def exterior_point():
             pdf.cell(200,10, txt = "{}".format("ID:" + oid +" "+ "Obstacle Type: " + obstacle),ln = 2, align = 'L')
         description = row.attributes.pop('ObstacleDescription')
         if description != None:
-            pdf.cell(200,10, txt = "{}".format("ID:" + oid +" "+ "ObstacleDescription: " + description), ln = 2, align = 'L' )
+            pdf.cell(200,10, txt = "{}".format("ID:" + x +" "+ "ObstacleDescription: " + description), ln = 2, align = 'L' )
             pdf.cell(200, 10, txt = "",ln = 1, align = 'L')
     
 
@@ -241,6 +299,7 @@ def picture():
     #print(image_list)
     for row in image_list:
         pdf.add_page()
+        #print(row)
         for x in row:
             #rotate_image(x)
             pdf.cell(200, 10, txt = "OSP_Point " + '{}'.format(oid),ln = 1, align = 'L')# code is for adding information above the images
@@ -260,15 +319,6 @@ def picture():
                 pdf.cell(200, 10, txt = "{}".format(""),ln = 2, align = 'L')
             pdf.image("{}".format(x),25,80,w=140)# x and y move the image up,down,left or right, w increases or decrease size
             #pdf.add_page()
-    w = []       
-    for items in image_list:
-        for x in items:
-            print(x[48:51])
-            w.append(x[48:51])
-    print(w)
-    z = w[3]
-    print(z)
-        
 
     
 
@@ -334,8 +384,6 @@ def picture():
             pdf.image("{}".format(x),20,50,w=160)# x and y move the image up,down,left or right, w increases or decrease size
             #pdf.add_page()
     pdf.output('eno.pdf')
-    
-    
 
     
     #Orientates the image 
