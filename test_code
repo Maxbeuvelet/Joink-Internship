@@ -6,6 +6,7 @@ from PyPDF2 import PdfMerger
 from fpdf import FPDF
 from PIL import Image, ExifTags
 import os
+import functools 
 pdf = FPDF()
 pdf.add_page()
 FPDF.add_page
@@ -84,7 +85,6 @@ def install_area():
 
     pdf.cell(200, 10, txt = "Email:",ln = 1, align = 'L')
     pdf.cell(200, 10, txt = "{}".format(Email),ln = 2, align = 'L')
-    pdf.cell(200, 10, txt = "",ln = 1, align = 'L')    
 
     
     #-----------information just for OSP--------------
@@ -95,45 +95,22 @@ def exterior_point():
     layers_features = layers_fset.features
     query_results = layers.query(where= "OrderNumber = {} ".format(Number_Order))
     oid  = str(layers_features[0].attributes.pop('OBJECTID'))
-    oidd = str(layers_features[1].attributes.pop('OBJECTID'))
-    
 
-    
-    
-    
-    TQData = gis.content.get('e3796b16d9484709963a1cc2984cf325')
-    templates ={"FTTH_TQ_CablePlacement":"Template-CablePlacement","FTTH_TQ_ISP":"Template-ISP","FTTH_TQ_OSP":"Template-OSP"}
-    for l in templates:
-
-        Layout = templates[l]
-
-        #getting Attachments from AGO
-        #Feature Server
-        TQData = gis.content.get('e3796b16d9484709963a1cc2984cf325')
-        #Layout Variables
-        GISLayouts={"Template-ISP":[0,r'\ISP'], "Template-OSP":[1,r'\OSP'], "Template-CablePlacement":[2,r'\OSP']}
-        LayoutV = GISLayouts[Layout]
-        LryNum = LayoutV[0]
-        ImagePath = LayoutV[1]
-        OutputPath = r"C:\Users\max.beuvelet\Desktop\FTTH Project"
+    OutputPath = r"C:\Users\max.beuvelet\Desktop\FTTH Project"
         
 
-    TQLayers = TQData.layers[1]
-    #query featuers 
-    TQFeatureSet = TQLayers.query(where='OrderNumber='+Number_Order,out_fields='OBJECTID')
-    #get object ids
-    ObjIDs = [x.attributes['OBJECTID'] for x in TQFeatureSet]
-    #print(ObjIDs)
+
     image_list = []
 
 
-    for ids in ObjIDs:
+    for y in query_results:
+        ids = y.attributes.pop('OBJECTID')
         arcpy.AddMessage(ids)
-        attach = TQLayers.attachments.get_list(oid=ids)
+        attach = layers.attachments.get_list(oid=ids)
         for att in attach:
-            DwnFile = TQLayers.attachments.download(oid=ids, attachment_id=att['id'],save_path=OutputPath+ImagePath )
+            DwnFile = layers.attachments.download(oid=ids, attachment_id=att['id'],save_path=OutputPath+r'\OSP' )
             arcpy.AddMessage(DwnFile)
-            index = len(OutputPath+ImagePath)+1
+            index = len(OutputPath+r'\OSP')+1
             NewFileName = DwnFile[0]
             NewFileName = NewFileName[:index] +' ' + str(ids) +' ' + NewFileName[index:]
             image_list.append([NewFileName])
@@ -143,69 +120,57 @@ def exterior_point():
 
             os.rename(DwnFile[0],NewFileName)
             rotate_image(NewFileName)
-            
-    w = []       
-    for items in image_list:
-        #Get list of image's
-        for index, x in enumerate(items):
-            print(index, items)
-            # get image numbers
-            w.append(x[48:51])
-    print(w)
-    x = w[5]
-    print(x)
 
-    
+
     #----------ExteriorSheeting----------
-    
-    Ext_sheet = layers_features[0].attributes.pop('ExteriorSheeting')
-    
-    pdf.cell(200, 10, txt = "Planned Path:",ln = 1, align = 'L')
-    try:
-        pdf.cell(200, 10, txt = "{}".format("ID:" + oid +" " + "Exterior Sheeting: "  + Ext_sheet ),ln = 2, align = 'L')
-    except:
-        pdf.cell(200, 10, txt = "{}".format(" "),ln = 2, align = 'L')
+        Ext_sheet = y.attributes.pop('ExteriorSheeting')
+        if Ext_sheet != None:
+            pdf.set_font('Times', 'B', 15)
+            pdf.cell(200, 10, txt = "Planned Path:",ln = 1, align = 'L')
+            pdf.set_font("Times", size = 15)
+            try:
+                pdf.cell(200, 10, txt = "{}".format("ID:" + oid +" " + "Exterior Sheeting: "  + Ext_sheet ),ln = 2, align = 'L')
+            except:
+                pdf.cell(200, 10, txt = "{}".format(" "),ln = 2, align = 'L')
 
 
     
     #----------EntryPointDescription----------
-    
-    Entry_Point = layers_features[0].attributes.pop('EntryPointDescription')
-    try:
-        pdf.multi_cell(200, 10, txt = "{}".format("ID:" + oid + " "+ "Entry Point: " + Entry_Point), align = 'L')
-    except: 
-        pdf.cell(200, 10, txt = "{}".format("Entry Point:  "),ln = 2, align = 'L')
+        Entry_Point = y.attributes.pop('EntryPointDescription')
+        if Entry_Point != None:
+            try:
+                pdf.multi_cell(200, 10, txt = "{}".format("ID:" + oid + " "+ "Entry Point: " + Entry_Point), align = 'L')
+            except: 
+                pdf.cell(200, 10, txt = "{}".format("Entry Point:  "),ln = 2, align = 'L')
 
 
 
         
     #----------Notes----------------------
     
-    note = layers_features[0].attributes.pop('Notes')
-
-    try:
-
-        pdf.multi_cell(200, 10, txt = "{}".format("ID:" + oid+ " " + "Notes " + note), align = 'L')
-        pdf.cell(200, 10, txt = "",ln = 1, align = 'L')   
-    except:
-        pdf.cell(200, 10, txt = "{}".format(" "),ln = 2, align = 'L')
-        pdf.cell(200, 10, txt = "",ln = 1, align = 'L')        
+        note = y.attributes.pop('Notes')
+        if note != None:
+            try:
+                pdf.multi_cell(200, 10, txt = "{}".format("ID:" + oid+ " " + "Notes " + note), align = 'L')
+            except:
+                pdf.cell(200, 10, txt = "{}".format(" "),ln = 2, align = 'L')
         
 
     
     #----------ObstacleType-----------
-    pdf.cell(200, 10, txt = "Obstacles:",ln = 1, align = 'L')
-    obstacle_type = {'GU': 'Gas Utility', 'WU':'Water Utility', 'EU':'Electric Utility', 'GEO':'Geothermal'}
-    for row in layers_features:
-        obstacle = row.attributes.pop('ObstacleType')
-        if obstacle != None:
-            obstacle = obstacle_type[obstacle]
-            pdf.cell(200,10, txt = "{}".format("ID:" + oid +" "+ "Obstacle Type: " + obstacle),ln = 2, align = 'L')
-        description = row.attributes.pop('ObstacleDescription')
-        if description != None:
-            pdf.cell(200,10, txt = "{}".format("ID:" + x +" "+ "ObstacleDescription: " + description), ln = 2, align = 'L' )
-            pdf.cell(200, 10, txt = "",ln = 1, align = 'L')
-    
+        pdf.set_font("Times",'B', size = 15)
+        pdf.cell(200, 10, txt = "Obstacles:",ln = 1, align = 'L')
+        pdf.set_font("Times", size = 15)
+        obstacle_type = {'GU': 'Gas Utility', 'WU':'Water Utility', 'EU':'Electric Utility', 'GEO':'Geothermal'}
+        for row in layers_features:
+            obstacle = row.attributes.pop('ObstacleType')
+            if obstacle != None:
+                obstacle = obstacle_type[obstacle]
+                pdf.cell(200,10, txt = "{}".format("ID:" + str(ids) +" "+ "Obstacle Type: " + obstacle),ln = 2, align = 'L')
+            description = row.attributes.pop('ObstacleDescription')
+            if description != None:
+                pdf.cell(200,10, txt = "{}".format("ID:" + str(ids) +" "+ "ObstacleDescription: " + description), ln = 2, align = 'L' )
+
 
         
 #---------- Referencing Exterior Line-------------------
@@ -224,8 +189,9 @@ def exterior_line():
     
     #----------Notes---------- 
     Notes = layers_features[0].attributes.pop('Notes')
-    
+    pdf.set_font("Times",'B', size = 15)
     pdf.cell(200, 10, txt = "Planned Path:",ln = 1, align = 'L')
+    pdf.set_font("Times", size = 15)
     pdf.multi_cell(200, 10, txt = "{}".format("ID: " + oid + " " + "Notes: " + Notes), align = 'L')
     
 
@@ -294,6 +260,7 @@ def picture():
             rotate_image(NewFileName)
             
 
+
             
     #adds the images into the pdf
     #print(image_list)
@@ -302,7 +269,7 @@ def picture():
         #print(row)
         for x in row:
             #rotate_image(x)
-            pdf.cell(200, 10, txt = "OSP_Point " + '{}'.format(oid),ln = 1, align = 'L')# code is for adding information above the images
+            pdf.cell(200, 10, txt = "OSP_Point " + '{}'.format(x[48:51]),ln = 1, align = 'L')# code is for adding information above the images
             try:
                 pdf.cell(200, 10, txt = "Exterior Sheeting:" + Ext_sheet,ln = 1, align = 'L')
             except:
@@ -317,7 +284,7 @@ def picture():
                 pdf.cell(200, 10, txt = "",ln = 1, align = 'L')   
             except:
                 pdf.cell(200, 10, txt = "{}".format(""),ln = 2, align = 'L')
-            pdf.image("{}".format(x),25,80,w=140)# x and y move the image up,down,left or right, w increases or decrease size
+            pdf.image("{}".format(x),20,70,w=165)# x and y move the image up,down,left or right, w increases or decrease size
             #pdf.add_page()
 
     
@@ -381,7 +348,7 @@ def picture():
         pdf.add_page()
         for x in row:
             pdf.multi_cell(200, 10, txt = "Notes:" + note, align = 'L')
-            pdf.image("{}".format(x),20,50,w=160)# x and y move the image up,down,left or right, w increases or decrease size
+            pdf.image("{}".format(x),20,60,w=160)# x and y move the image up,down,left or right, w increases or decrease size
             #pdf.add_page()
     pdf.output('eno.pdf')
 
