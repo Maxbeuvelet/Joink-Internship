@@ -46,18 +46,18 @@ def install_area():
     #--------------Address----------------------
     
     address = layers_features[0].attributes.pop('POC_Address')
-    
+    pdf.set_font("Times",'B', size = 15)
     pdf.cell(1, 1, txt = "Address:",ln = 1, align = 'L')#Heading, cant figure out what the numbers do
+    pdf.set_font("Times", size = 15)
     pdf.cell(200, 10, txt = "{}".format(address),ln = 2, align = 'L')#Information in cell
     pdf.cell(200, 10, txt = "",ln = 1, align = 'L')# This line adds a space inbetween the next one
- 
 
-    
     #--------------OrderNumber--------------------
 
     Order_number = str(layers_features[0].attributes.pop('OrderNumber'))
-    
+    pdf.set_font("Times",'B', size = 15)
     pdf.cell(200, 10, txt = "Order Number:",ln = 1, align = 'L')
+    pdf.set_font("Times",size = 15)
     pdf.cell(200, 10, txt = "{}".format(Number_Order),ln = 2, align = 'L')
     pdf.cell(200, 10, txt = "",ln = 1, align = 'L')
     
@@ -66,24 +66,27 @@ def install_area():
     
     name_first = layers_features[0].attributes.pop('POC_FirstName')
     name_last = layers_features[0].attributes.pop('POC_LastName')
-
+    pdf.set_font("Times",'B', size = 15)
     pdf.cell(200, 10, txt = "Name:",ln = 1, align = 'L')
+    pdf.set_font("Times",size = 15)
     pdf.cell(200, 10, txt = "{}".format(name_first+ " " +name_last),ln = 2, align = 'L')
     pdf.cell(200, 10, txt = "",ln = 1, align = 'L')    
     
     
     #-------------CellPhone---------------------
     Phone_number = Order_number = str(layers_features[0].attributes.pop('POC_Phone'))
-
+    pdf.set_font("Times",'B', size = 15)
     pdf.cell(200, 10, txt = "PhoneNumber:",ln = 1, align = 'L')
+    pdf.set_font("Times",size = 15)
     pdf.cell(200, 10, txt = "{}".format(Phone_number),ln = 2, align = 'L')
     pdf.cell(200, 10, txt = "",ln = 1, align = 'L')    
 
     
     #-------------Email----------------------
     Email = layers_features[0].attributes.pop('POC_Email')
-
+    pdf.set_font("Times",'B', size = 15)
     pdf.cell(200, 10, txt = "Email:",ln = 1, align = 'L')
+    pdf.set_font("Times",size = 15)
     pdf.cell(200, 10, txt = "{}".format(Email),ln = 2, align = 'L')
 
     
@@ -162,20 +165,19 @@ def exterior_point():
         pdf.cell(200, 10, txt = "Obstacles:",ln = 1, align = 'L')
         pdf.set_font("Times", size = 15)
         obstacle_type = {'GU': 'Gas Utility', 'WU':'Water Utility', 'EU':'Electric Utility', 'GEO':'Geothermal'}
-        for row in layers_features:
-            obstacle = row.attributes.pop('ObstacleType')
-            if obstacle != None:
-                obstacle = obstacle_type[obstacle]
-                pdf.cell(200,10, txt = "{}".format("ID:" + str(ids) +" "+ "Obstacle Type: " + obstacle),ln = 2, align = 'L')
-            description = row.attributes.pop('ObstacleDescription')
-            if description != None:
-                pdf.cell(200,10, txt = "{}".format("ID:" + str(ids) +" "+ "ObstacleDescription: " + description), ln = 2, align = 'L' )
+        #for row in layers_features:
+        obstacle = y.attributes.pop('ObstacleType')
+        if obstacle != None:
+            obstacle = obstacle_type[obstacle]
+            pdf.cell(200,10, txt = "{}".format("ID:" + str(ids) +" "+ "Obstacle Type: " + obstacle),ln = 2, align = 'L')
+        description = y.attributes.pop('ObstacleDescription')
+        if description != None:
+            pdf.cell(200,10, txt = "{}".format("ID:" + str(ids) +" "+ "ObstacleDescription: " + description), ln = 2, align = 'L' )
+
+            
 
 
-        
 #---------- Referencing Exterior Line-------------------
-
- 
 
 
     
@@ -260,8 +262,6 @@ def picture():
             rotate_image(NewFileName)
             
 
-
-            
     #adds the images into the pdf
     #print(image_list)
     for row in image_list:
@@ -363,8 +363,6 @@ def rotate_image(ImgFile):
                 break
 
         exif = image._getexif()
-        #print(exif)
-        #print(exif[orientation])
 
         if exif[orientation] == 3:
             image=image.rotate(180, expand=True)
