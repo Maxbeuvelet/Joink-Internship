@@ -48,7 +48,7 @@ def install_area():
     address = layers_features[0].attributes.pop('POC_Address')
     pdf.set_font("Times",'B', size = 15)
     pdf.cell(1, x, txt = "Address:",ln = 1, align = 'L')#Heading, cant figure out what the numbers do
-    pdf.set_font("Times", size = 15)
+    pdf.set_font('Times', size = 15)
     pdf.cell(200, 10, txt = "{}".format(address),ln = 2, align = 'L')#Information in cell
     pdf.cell(200, x, txt = "",ln = 1, align = 'L')# This line adds a space inbetween the next one
     
@@ -156,7 +156,7 @@ def exterior_point():
             try:
                 pdf.multi_cell(200, 10, txt = "{}".format("ID:" + oid+ " " + "Notes " + note), align = 'L')
                 pdf.set_font("Times",'B', size = 15)
-                pdf.cell(200, 10, txt = "Obstacles:",ln = 1, align = 'L')
+                pdf.cell(200, 20, txt = "Obstacles:",ln = 1, align = 'L')
                 pdf.set_font("Times", size = 13)
             except:
                 pdf.cell(200, 10, txt = "{}".format(" "),ln = 2, align = 'L')
@@ -165,12 +165,10 @@ def exterior_point():
 
     
     #----------ObstacleType-----------
-#         pdf.set_font("Times",'B', size = 15)
-#         pdf.cell(200, 10, txt = "Obstacles:",ln = 1, align = 'L')# This Line repeates, keeps printing obstacles 
-#         pdf.set_font("Times", size = 15)
         
         obstacle_type = {'GU': 'Gas Utility', 'WU':'Water Utility', 'EU':'Electric Utility', 'GEO':'Geothermal'}
         #for row in layers_features:
+        #print(y.attributes)
         obstacle = y.attributes.pop('ObstacleType')
         if obstacle != None:
             obstacle = obstacle_type[obstacle]
@@ -249,16 +247,18 @@ def picture():
     #get object ids
     ObjIDs = [x.attributes['OBJECTID'] for x in TQFeatureSet]
     #print(ObjIDs)
-    image_list = []
+    
+    
 
-
-    for ids in ObjIDs:
+    for y in query_results:
+        image_list = []
+        ids = y.attributes.pop('OBJECTID')
         arcpy.AddMessage(ids)
-        attach = TQLayers.attachments.get_list(oid=ids)
+        attach = layers.attachments.get_list(oid=ids)
         for att in attach:
-            DwnFile = TQLayers.attachments.download(oid=ids, attachment_id=att['id'],save_path=OutputPath+ImagePath )
+            DwnFile = layers.attachments.download(oid=ids, attachment_id=att['id'],save_path=OutputPath+r'\OSP' )
             arcpy.AddMessage(DwnFile)
-            index = len(OutputPath+ImagePath)+1
+            index = len(OutputPath+r'\OSP')+1
             NewFileName = DwnFile[0]
             NewFileName = NewFileName[:index] +' ' + str(ids) +' ' + NewFileName[index:]
             image_list.append([NewFileName])
@@ -269,31 +269,32 @@ def picture():
             os.rename(DwnFile[0],NewFileName)
             rotate_image(NewFileName)
             
-
-    #adds the images into the pdf
-    #print(image_list)
-    for row in image_list:
-        pdf.add_page()
-        #print(row)
-        for x in row:
-            #rotate_image(x)
-            pdf.cell(200, 10, txt = "OSP_Point " + '{}'.format(x[48:51]),ln = 1, align = 'L')# code is for adding information above the images
-            try:
-                pdf.cell(200, 10, txt = "Exterior Sheeting:" + Ext_sheet,ln = 1, align = 'L')
-            except:
+            
+        obstacle_type = {'GU': 'Gas Utility', 'WU':'Water Utility', 'EU':'Electric Utility', 'GEO':'Geothermal'}
+        obstacle = y.attributes.pop('ObstacleType')
+        description = y.attributes.pop('ObstacleDescription')
+        Ext_sheet = y.attributes.pop('ExteriorSheeting')
+        Entry_Point = y.attributes.pop('EntryPointDescription')
+        Notes = y.attributes.pop('Notes')
+        for row in image_list:
+            pdf.add_page()
+            for x in row:
+                pdf.cell(200, 10, txt = "OSP_Point " + '{}'.format(str(ids)),ln = 1, align = 'L')
+                if obstacle != None:
+                    obstacle_name = obstacle_type[obstacle]
+                    pdf.cell(200, 10, txt = "Obstcle Type:" + obstacle_name,ln = 1, align = 'L')
+                    if description != None:
+                        pdf.cell(200, 10, txt = "Obstacle Description:" + description,ln = 1, align = 'L')
+                if Ext_sheet != None:
+                    pdf.cell(200, 10, txt = "Exterior Sheeting:" + Ext_sheet,ln = 1, align = 'L')
+                if Entry_Point != None:
+                    pdf.multi_cell(200, 10, txt = "Entry Point:" + Entry_Point, align = 'L')
+                if Notes != None:
+                    pdf.multi_cell(200, 10, txt = "Notes:" + Notes, align = 'L')
                 pdf.cell(200, 10, txt = "{}".format(""),ln = 2, align = 'L')
-            try:
-                pdf.multi_cell(200, 10, txt = "Entry Point:" + Entry_Point, align = 'L')
-            except:
-                pdf.cell(200, 10, txt = "{}".format(""),ln = 2, align = 'L')
-            try:
-                pdf.multi_cell(200, 10, txt = "Notes:" + Notes, align = 'L')
-                #pdf.cell(200, 10, txt = "{}".format(Notes),ln = 2, align = 'L')# try except is used when a NoneType error is given
-                pdf.cell(200, 10, txt = "",ln = 1, align = 'L')   
-            except:
-                pdf.cell(200, 10, txt = "{}".format(""),ln = 2, align = 'L')
-            pdf.image("{}".format(x),20,70,w=165)# x and y move the image up,down,left or right, w increases or decrease size
-            #pdf.add_page()
+                pdf.image("{}".format(x),20,70,w=165)# x and y move the image up,down,left or right, w increases or decrease size
+                
+            
 
     
 
@@ -380,6 +381,7 @@ def rotate_image(ImgFile):
             image=image.rotate(90, expand=True)
 
         image.save(ImgFile)
+        
         image.close()
     except (AttributeError, KeyError, IndexError):
         # cases: image don't have getexif
