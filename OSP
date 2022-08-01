@@ -47,7 +47,7 @@ def install_area():
     
     address = layers_features[0].attributes.pop('POC_Address')
     pdf.set_font("Times",'B', size = 15)
-    pdf.cell(1, x, txt = "Address:",ln = 1, align = 'L')#Heading, cant figure out what the numbers do
+    pdf.cell(1, x, txt = "Address:",ln = 1, align = 'L')#Heading, number used for spacing
     pdf.set_font('Times', size = 15)
     pdf.cell(200, 10, txt = "{}".format(address),ln = 2, align = 'L')#Information in cell
     pdf.cell(200, x, txt = "",ln = 1, align = 'L')# This line adds a space inbetween the next one
