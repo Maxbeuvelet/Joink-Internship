@@ -16,11 +16,11 @@ x = 5 # Line spacing
 
 
 gis = GIS('home')
-int_point = gis.content.get('e3796b16d9484709963a1cc2984cf325')
+int_point = gis.content.get('#edited out for security reasons')
 
 
 
-search_results = gis.content.search('title: FTTH TQ','Feature Layer')
+search_results = gis.content.search('#edited out for security reasons')
 picture = search_results[0]
 
 # Prints Feature Layer
@@ -224,7 +224,7 @@ def picture():
     Notes = layers_features[0].attributes.pop('Notes')
 
     #pdf.add_page()
-    TQData = gis.content.get('e3796b16d9484709963a1cc2984cf325')
+    TQData = gis.content.get('#edited out for security reasons')
     templates ={"FTTH_TQ_CablePlacement":"Template-CablePlacement","FTTH_TQ_ISP":"Template-ISP","FTTH_TQ_OSP":"Template-OSP"}
     for l in templates:
 
@@ -232,7 +232,7 @@ def picture():
 
         #getting Attachments from AGO
         #Feature Server
-        TQData = gis.content.get('e3796b16d9484709963a1cc2984cf325')
+        TQData = gis.content.get('#edited out for security reasons')
         #Layout Variables
         GISLayouts={"Template-ISP":[0,r'\ISP'], "Template-OSP":[1,r'\OSP'], "Template-CablePlacement":[2,r'\OSP']}
         LayoutV = GISLayouts[Layout]
@@ -307,7 +307,7 @@ def picture():
     note = layers_features[0].attributes.pop('Notes')
 
     #pdf.add_page()
-    TQData = gis.content.get('e3796b16d9484709963a1cc2984cf325')
+    TQData = gis.content.get('#edited out for security reasons')
     templates ={"FTTH_TQ_CablePlacement":"Template-CablePlacement","FTTH_TQ_ISP":"Template-ISP","FTTH_TQ_OSP":"Template-OSP"}
     for l in templates:
 
@@ -315,7 +315,7 @@ def picture():
 
         #getting Attachments from AGO
         #Feature Server
-        TQData = gis.content.get('e3796b16d9484709963a1cc2984cf325')
+        TQData = gis.content.get('#edited out for security reasons')
         #Layout Variables
         GISLayouts={"Template-ISP":[0,r'\ISP'], "Template-OSP":[1,r'\OSP'], "Template-CablePlacement":[2,r'\OSP']}
         LayoutV = GISLayouts[Layout]
