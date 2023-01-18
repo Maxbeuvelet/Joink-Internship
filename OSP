@@ -16,11 +16,11 @@ x = 5 # Line spacing
 
 
 gis = GIS('home')
-int_point = gis.content.get('#edited out for security reasons')
+int_point = gis.content.get('#redacted')
 
 
 
-search_results = gis.content.search('#edited out for security reasons')
+search_results = gis.content.search('#redacted')
 picture = search_results[0]
 
 # Prints Feature Layer
